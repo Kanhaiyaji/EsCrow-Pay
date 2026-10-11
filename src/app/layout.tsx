@@ -16,7 +16,9 @@ export const metadata: Metadata = {
   title: "EsCrow Pay — Autonomous Agentic Commerce & Escrow Settlements",
   description: "The Economic Layer for AI Agents Powered by PayPal. Autonomous escrow custody, AP2 cryptographic mandates, and instant verified payouts.",
   icons: {
-    icon: "/favicon.ico",
+    icon: "/icon.svg",
+    shortcut: "/icon.svg",
+    apple: "/icon.svg",
   },
 };
 

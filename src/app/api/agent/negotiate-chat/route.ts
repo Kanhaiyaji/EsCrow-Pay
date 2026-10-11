@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import trainedModel from '@/lib/enron_model_weights.json';
 
 export interface ChatMessage {
   id: string;
@@ -10,124 +9,117 @@ export interface ChatMessage {
   timestamp: string;
 }
 
-// Tokenize text into words
-function tokenize(text: string): string[] {
-  return text
-    .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, ' ')
-    .split(/\s+/)
-    .filter(w => w.length > 1);
-}
-
-// Machine Learning Inference Engine: Cosine Similarity over Trained Sparse TF-IDF Vector Space
-function runModelInference(userPrompt: string) {
-  const tokens = tokenize(userPrompt);
-  if (tokens.length === 0) {
-    return {
-      predictedReply: 'Received. Please outline the specific timeline and parameters.',
-      confidenceScore: 0.95,
-      matchedFeatures: 0,
-    };
-  }
-
-  // 1. Vectorize input prompt using precomputed training IDF weights
-  const idfMap = trainedModel.idf_weights as Record<string, number>;
-  const queryVector: Record<string, number> = {};
-  let queryNormSq = 0.0;
-
-  for (const t of tokens) {
-    if (idfMap[t]) {
-      const weight = idfMap[t];
-      queryVector[t] = (queryVector[t] || 0) + weight;
-    }
-  }
-
-  for (const t in queryVector) {
-    queryNormSq += queryVector[t] * queryVector[t];
-  }
-
-  const queryNorm = Math.sqrt(queryNormSq) || 1.0;
-
-  // 2. Compute Cosine Similarity against all trained model vectors
-  let maxCosineSim = -1.0;
-  let predictedReply = '';
-  let matchedTokensCount = 0;
-
-  for (const doc of trainedModel.corpus_vectors) {
-    let dotProduct = 0.0;
-    let localMatches = 0;
-
-    for (const t in queryVector) {
-      if ((doc.v as Record<string, number>)[t]) {
-        dotProduct += queryVector[t] * (doc.v as Record<string, number>)[t];
-        localMatches++;
-      }
-    }
-
-    if (dotProduct > 0) {
-      const cosineSim = dotProduct / (queryNorm * (doc.norm || 1.0));
-      if (cosineSim > maxCosineSim) {
-        maxCosineSim = cosineSim;
-        predictedReply = doc.reply;
-        matchedTokensCount = localMatches;
-      }
-    }
-  }
-
-  // If completely out of distribution, select closest representative sample
-  if (maxCosineSim <= 0 || !predictedReply) {
-    const fallbackIdx = Math.abs(userPrompt.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0)) % trainedModel.corpus_vectors.length;
-    predictedReply = trainedModel.corpus_vectors[fallbackIdx].reply;
-    maxCosineSim = 0.42;
-  }
-
-  return {
-    predictedReply,
-    confidenceScore: parseFloat(Math.min(maxCosineSim, 0.99).toFixed(4)),
-    matchedFeatures: matchedTokensCount,
-  };
-}
-
 export async function POST(req: NextRequest) {
   try {
-    const { userMessage } = await req.json();
+    const { userMessage, contractGoal, budget, milestones } = await req.json();
 
+    const lower = (userMessage || '').toLowerCase();
     const now = new Date().toLocaleTimeString();
     const responses: ChatMessage[] = [];
 
-    // Run ML Model Inference
-    const { predictedReply, confidenceScore, matchedFeatures } = runModelInference(userMessage || '');
+    // 1. Query: Progress / Status / "How much work done?"
+    if (lower.includes('work done') || lower.includes('status') || lower.includes('progress') || lower.includes('kitna kaam') || lower.includes('update')) {
+      const msList = milestones || [];
+      const completed = msList.filter((m: any) => m.status === 'paid' || m.status === 'verified').length;
+      const total = msList.length || 3;
+      const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
 
-    // 1. Prediction from ML Trained Enron Model
-    responses.push({
-      id: `chat-${Date.now()}-1`,
-      sender: 'Enron ML Inference Model (v1)',
-      role: `Confidence: ${(confidenceScore * 100).toFixed(1)}% | Features: ${matchedFeatures}`,
-      color: 'text-sky-400',
-      message: predictedReply,
-      timestamp: now,
-    });
+      responses.push({
+        id: `chat-${Date.now()}-1`,
+        sender: 'Orchestrator AI',
+        role: 'Contract Project Manager',
+        color: 'text-indigo-400',
+        message: `Project Progress: ${pct}% Complete (${completed}/${total} milestones verified and settled). All funds remain secured in PayPal Escrow Vault.`,
+        timestamp: now,
+      });
 
-    // 2. Escrow Protocol Arbiter registration
-    responses.push({
-      id: `chat-${Date.now()}-2`,
-      sender: 'PayPal Escrow Arbiter',
-      role: 'AP2 Settlement Layer',
-      color: 'text-indigo-400',
-      message: `Prediction evaluated by ML vector space. Milestone terms updated in active PayPal Escrow contract.`,
-      timestamp: now,
-    });
+      responses.push({
+        id: `chat-${Date.now()}-2`,
+        sender: 'Agent-Builder',
+        role: 'Execution AI',
+        color: 'text-amber-400',
+        message: completed === 0 
+          ? `Currently implementing Milestone 1 & 2. Ready for verification as soon as deliverable is inspected.`
+          : `Milestones completed: ${completed}. Next phase is awaiting execution review.`,
+        timestamp: now,
+      });
+    }
+    // 2. Query: Cost / Budget / Discount
+    else if (lower.includes('discount') || lower.includes('budget') || lower.includes('cheap') || lower.includes('price') || lower.includes('kam') || lower.includes('cost')) {
+      responses.push({
+        id: `chat-${Date.now()}-1`,
+        sender: 'Orchestrator AI',
+        role: 'Autonomous Auctioneer',
+        color: 'text-indigo-400',
+        message: `Client requested rate optimization. Evaluating deliverable scope across the active agent mesh.`,
+        timestamp: now,
+      });
+
+      responses.push({
+        id: `chat-${Date.now()}-2`,
+        sender: 'Agent-Builder',
+        role: 'Execution AI',
+        color: 'text-amber-400',
+        message: `I can optimize the model by utilizing pre-indexed embeddings, saving compute cycles. I can offer a 10% discount on my milestone.`,
+        timestamp: now,
+      });
+
+      responses.push({
+        id: `chat-${Date.now()}-3`,
+        sender: 'Agent-Sentinel',
+        role: 'Security Auditor AI',
+        color: 'text-emerald-400',
+        message: `Security test harness will maintain 100% test coverage and OWASP compliance regardless of budget concessions. Counter-offer accepted.`,
+        timestamp: now,
+      });
+    }
+    // 3. Query: Deadline / Speed / Urgent
+    else if (lower.includes('fast') || lower.includes('speed') || lower.includes('deadline') || lower.includes('jaldi') || lower.includes('time') || lower.includes('hurry')) {
+      responses.push({
+        id: `chat-${Date.now()}-1`,
+        sender: 'Agent-Architect',
+        role: 'Solutions Architect AI',
+        color: 'text-blue-400',
+        message: `Pipeline prioritized. OpenAPI 3.1 specifications and endpoint contracts can be submitted within 20 minutes for AI Inspector review.`,
+        timestamp: now,
+      });
+
+      responses.push({
+        id: `chat-${Date.now()}-2`,
+        sender: 'Agent-Builder',
+        role: 'Execution AI',
+        color: 'text-amber-400',
+        message: `Core execution logic will deploy immediately upon contract validation.`,
+        timestamp: now,
+      });
+    }
+    // 4. Default contextual conversation
+    else {
+      responses.push({
+        id: `chat-${Date.now()}-1`,
+        sender: 'Orchestrator AI',
+        role: 'Contract Arbiter',
+        color: 'text-indigo-400',
+        message: `Understood: "${userMessage}". Coordinating with Architect, Builder, and Sentinel agents to adhere strictly to your AP2 escrow terms.`,
+        timestamp: now,
+      });
+
+      responses.push({
+        id: `chat-${Date.now()}-2`,
+        sender: 'Agent-Architect',
+        role: 'Solutions Architect AI',
+        color: 'text-blue-400',
+        message: `Specifications are aligned with your project requirements. Awaiting deliverable inspection or parameter changes.`,
+        timestamp: now,
+      });
+    }
 
     return NextResponse.json({
       success: true,
-      modelArchitecture: trainedModel.model_name,
-      trainingCorpusSize: trainedModel.training_samples,
-      vocabularyDimensions: trainedModel.vocabulary_size,
-      confidenceScore,
       agentReplies: responses,
     });
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : 'Inference error';
+    const msg = err instanceof Error ? err.message : 'Chat error';
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

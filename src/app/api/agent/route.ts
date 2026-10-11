@@ -14,7 +14,7 @@ export interface MilestoneSpec {
 
 export async function POST(req: NextRequest) {
   try {
-    const { action, contractGoal, budget, milestone, scenario, templateType } = await req.json();
+    const { action, contractGoal, budget, milestone, scenario, templateType, deliverable } = await req.json();
 
     // 1. Negotiation with real code templates, dialogue feed & AP2 Mandate
     if (action === 'negotiate_milestones') {
@@ -158,27 +158,23 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ milestones, agentBids, ap2Mandate, negotiationChat });
     }
 
-    // 2. AI Inspector
+    // 2. AI Inspector (Real Deterministic AST & Security Auditor)
     if (action === 'verify_deliverable') {
       const isSimulatingFailure = scenario === 'simulate_failure';
+      const { inspectDeliverableCode } = await import('@/lib/code_inspector');
 
-      if (isSimulatingFailure) {
-        return NextResponse.json({
-          verified: false,
-          score: 41,
-          notes: `CRITICAL ALERT: Deliverable failed automated security verification. Found 2 unhandled injection vulnerabilities & memory leak. PayPal Escrow retained; Auto-Refund Dispute triggered.`,
-          suggestedStatus: 'disputed',
-          actionTaken: 'REFUND_RECOMMENDED',
-        });
-      }
+      const targetCode = deliverable || milestone?.deliverableCode || '';
+      const criteria = milestone?.verificationCriteria || 'General Quality & Security SLA';
 
-      const score = Math.floor(Math.random() * 5) + 95; // 95 - 99%
+      const report = inspectDeliverableCode(targetCode, criteria, isSimulatingFailure);
+
       return NextResponse.json({
-        verified: true,
-        score: score,
-        notes: `AI Inspector verification PASSED. Static analysis: 0 syntax errors. Security scan: Clean. Automated test assertions: 100% pass. Authorized for automated PayPal Payout.`,
-        suggestedStatus: 'verified',
-        actionTaken: 'RELEASE_PAYPAL_FUNDS',
+        verified: report.passed,
+        score: report.overallScore,
+        notes: report.criteriaFulfillment.verdict,
+        suggestedStatus: report.passed ? 'verified' : 'disputed',
+        actionTaken: report.passed ? 'RELEASE_PAYPAL_FUNDS' : 'REFUND_RECOMMENDED',
+        report,
       });
     }
 

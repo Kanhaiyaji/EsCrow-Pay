@@ -259,6 +259,7 @@ export default function EscrowPayDashboard() {
           userMessage: userText,
           contractGoal: contract.title,
           budget: contract.totalBudget,
+          milestones: contract.milestones,
         }),
       });
       const data = await res.json();

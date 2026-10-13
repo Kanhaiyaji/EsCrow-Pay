@@ -1,15 +1,16 @@
 @import "tailwindcss";
 
 :root {
-  --background: #030712;
-  --foreground: #f8fafc;
-  --card-bg: rgba(15, 23, 42, 0.75);
-  --card-border: rgba(255, 255, 255, 0.08);
-  --card-hover-border: rgba(56, 189, 248, 0.3);
-  --paypal-blue: #0066f5;
+  --background: #f5f7fa;
+  --foreground: #000000;
+  --card-bg: #ffffff;
+  --card-border: #e2e8f0;
+  --paypal-blue: #0070e0;
   --paypal-dark-blue: #002991;
-  --paypal-cyan: #38bdf8;
+  --paypal-deep-navy: #001c64;
   --paypal-gold: #ffd140;
+  --paypal-gold-hover: #ffc439;
+  --paypal-cyan: #38bdf8;
 }
 
 @theme inline {
@@ -21,44 +22,51 @@
 
 /* Base Body & Layout */
 body {
-  background-color: #030712;
-  color: #f8fafc;
+  background-color: #f5f7fa;
+  color: #0f172a;
   font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   overflow-x: hidden;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Subtle Fintech Grid Background */
+/* PayPal Open Grid & Ambient Background */
 .bg-fintech-grid {
+  background-color: #f5f7fa;
   background-image: 
-    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0, 102, 245, 0.15), transparent),
-    radial-gradient(ellipse 60% 30% at 80% 10%, rgba(99, 102, 241, 0.1), transparent),
-    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    radial-gradient(ellipse 90% 50% at 50% -10%, rgba(0, 112, 224, 0.08), transparent),
+    radial-gradient(ellipse 70% 30% at 85% 15%, rgba(0, 41, 145, 0.05), transparent),
+    linear-gradient(to right, rgba(0, 41, 145, 0.025) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 41, 145, 0.025) 1px, transparent 1px);
   background-size: 100% 100%, 100% 100%, 36px 36px, 36px 36px;
 }
 
-/* Glassmorphic Elevated Card */
+/* PayPal Open Plate Cards */
 .fintech-card {
-  background: rgba(11, 19, 38, 0.75);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 20px -2px rgba(0, 41, 145, 0.05), 0 1px 3px 0 rgba(0, 0, 0, 0.02);
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .fintech-card:hover {
-  border-color: rgba(56, 189, 248, 0.25);
-  box-shadow: 0 14px 40px -12px rgba(0, 102, 245, 0.15), 0 0 0 1px rgba(56, 189, 248, 0.1) inset;
+  border-color: #0070e0;
+  box-shadow: 0 12px 30px -4px rgba(0, 41, 145, 0.1), 0 2px 6px -1px rgba(0, 0, 0, 0.03);
 }
 
-/* Premium Pill Shape Buttons */
+/* PayPal Cobalt Accent Card */
+.fintech-card-cobalt {
+  background: linear-gradient(135deg, #002991 0%, #001c64 100%);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 12px 30px -4px rgba(0, 41, 145, 0.25);
+}
+
+/* Premium Pill Shape Buttons & Interactive States */
 .fintech-pill-btn {
   border-radius: 9999px;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: -0.01em;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -67,35 +75,53 @@ body {
   transform: scale(0.98);
 }
 
-/* Subtle Ambient Glow */
-.glow-blue {
-  box-shadow: 0 0 35px -5px rgba(0, 102, 245, 0.3);
+/* Specific PayPal Pill Variants */
+.btn-paypal-primary {
+  background-color: #000000;
+  color: #ffffff;
+  border-radius: 9999px;
+  font-weight: 700;
+}
+.btn-paypal-primary:hover {
+  background-color: #0070e0;
 }
 
-.glow-cyan {
-  box-shadow: 0 0 35px -5px rgba(56, 189, 248, 0.25);
+.btn-paypal-cobalt {
+  background-color: #002991;
+  color: #ffffff;
+  border-radius: 9999px;
+  font-weight: 700;
+}
+.btn-paypal-cobalt:hover {
+  background-color: #0070e0;
 }
 
-.glow-emerald {
-  box-shadow: 0 0 30px -5px rgba(16, 185, 129, 0.25);
+.btn-paypal-gold {
+  background-color: #ffd140;
+  color: #000000;
+  border-radius: 9999px;
+  font-weight: 800;
+}
+.btn-paypal-gold:hover {
+  background-color: #ffc439;
 }
 
-/* Custom Slim Dark Scrollbar */
+/* Custom Slim Light Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(3, 7, 18, 0.6);
+  background: rgba(241, 245, 249, 0.8);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(148, 163, 184, 0.4);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(56, 189, 248, 0.4);
+  background: rgba(0, 112, 224, 0.6);
 }

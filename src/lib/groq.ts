@@ -23,7 +23,7 @@ export async function callGroqChat(
     return null; // Gracefully fallback when key is not configured
   }
 
-  const model = options.model || process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
+  const model = options.model || process.env.GROQ_MODEL || 'openai/gpt-oss-120b';
 
   try {
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {

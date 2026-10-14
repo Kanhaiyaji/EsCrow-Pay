@@ -60,7 +60,7 @@ Respond ONLY with valid JSON array:
             return NextResponse.json({ 
               success: true,
               agentReplies: mapped, 
-              poweredBy: 'Groq (Llama-3.3-70B)' 
+              poweredBy: 'Groq (GPT-OSS-120B)' 
             });
           }
         } catch (e) {

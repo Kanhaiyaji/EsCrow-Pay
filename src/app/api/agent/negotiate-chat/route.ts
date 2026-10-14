@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { callGroqChat } from '@/lib/groq';
 
 export interface ChatMessage {
   id: string;
@@ -16,6 +17,57 @@ export async function POST(req: NextRequest) {
     const lower = (userMessage || '').toLowerCase();
     const now = new Date().toLocaleTimeString();
     const responses: ChatMessage[] = [];
+
+    // Attempt Groq LLM Generation if configured
+    if (process.env.GROQ_API_KEY) {
+      const groqPrompt = [
+        {
+          role: 'system' as const,
+          content: `You are simulating an autonomous multi-agent mesh for EsCrow Pay, an escrow system with PayPal settlement.
+Contract Goal: "${contractGoal || 'Production Software Pipeline'}"
+Budget: $${budget || 75} USD
+Active Milestones: ${JSON.stringify(milestones || [])}
+
+The user sends a negotiation message: "${userMessage}".
+Generate a JSON array of 1 to 3 distinct responses from the agents:
+- "Orchestrator AI" (role: "Contract Project Manager", color: "text-indigo-400")
+- "Agent-Architect" (role: "Solutions Architect AI", color: "text-blue-400")
+- "Agent-Builder" (role: "Execution AI", color: "text-amber-400")
+- "Agent-Sentinel" (role: "Security Auditor AI", color: "text-emerald-400")
+
+Respond ONLY with valid JSON array:
+[{"sender": "...", "role": "...", "color": "...", "message": "..."}]`,
+        },
+        {
+          role: 'user' as const,
+          content: userMessage,
+        },
+      ];
+
+      const groqRaw = await callGroqChat(groqPrompt, { temperature: 0.3 });
+      if (groqRaw) {
+        try {
+          const parsed = JSON.parse(groqRaw.trim().replace(/^```json/, '').replace(/```$/, ''));
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            const mapped = parsed.map((item: any, idx: number) => ({
+              id: `chat-groq-${Date.now()}-${idx}`,
+              sender: item.sender || 'Orchestrator AI',
+              role: item.role || 'Agent',
+              color: item.color || 'text-indigo-400',
+              message: item.message || '',
+              timestamp: now,
+            }));
+            return NextResponse.json({ 
+              success: true,
+              agentReplies: mapped, 
+              poweredBy: 'Groq (Llama-3.3-70B)' 
+            });
+          }
+        } catch (e) {
+          console.warn('Groq parse error, using fallback:', e);
+        }
+      }
+    }
 
     // 1. Query: Progress / Status / "How much work done?"
     if (lower.includes('work done') || lower.includes('status') || lower.includes('progress') || lower.includes('kitna kaam') || lower.includes('update')) {
